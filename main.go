@@ -203,7 +203,9 @@ func main() {
 	log.Info("Initiating")
 
 	// Check if inputs are valid socket addresses
-	checkInputs()
+	if err := checkInputs(); err != nil {
+		log.Fatal(err)
+	}
 
 	ipt, err = iptables.New()
 	if err != nil {
