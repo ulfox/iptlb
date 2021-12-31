@@ -90,6 +90,10 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			err = operator.GetStateLogEnabled()
+			if err != nil {
+				log.Fatal(err)
+			}
 			err = operator.GetStateRulesBackend()
 			if err != nil {
 				log.Fatal(err)

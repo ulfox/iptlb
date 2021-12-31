@@ -22,6 +22,7 @@ type Operator struct {
 	Cache   struct {
 		Src, RulesType, Protocol, LogLevel, Profile, Chain, Table string
 		Dest                                                      []string
+		ChainLogging                                              bool
 	}
 }
 
@@ -73,6 +74,7 @@ func (o *Operator) copyToCache() {
 	o.Cache.Profile = o.Opts.Profile
 	o.Cache.Chain = o.Opts.Chain
 	o.Cache.Table = o.Opts.Table
+	o.Cache.ChainLogging = o.Opts.ChainLogging
 }
 
 func (o *Operator) copyFromCache() {
@@ -84,6 +86,7 @@ func (o *Operator) copyFromCache() {
 	o.Opts.Profile = o.Cache.Profile
 	o.Opts.Chain = o.Cache.Chain
 	o.Opts.Table = o.Cache.Table
+	o.Opts.ChainLogging = o.Cache.ChainLogging
 }
 
 // Configure is the main function that runs after we initiate operator.
@@ -250,6 +253,10 @@ func (o *Operator) AddProfile() error {
 	if err != nil {
 		return err
 	}
+	err = o.Storage.AddLogEnabled(o.Opts.Profile, o.Opts.ChainLogging)
+	if err != nil {
+		return err
+	}
 	err = o.Storage.AddRulesBackend(o.Opts.Profile, o.Opts.RulesType)
 	if err != nil {
 		return err
@@ -285,9 +292,11 @@ addProfileAfterDBSync:
 		return err
 	}
 
-	err = o.LogJumpRules(true)
-	if err != nil {
-		return err
+	if o.Opts.ChainLogging {
+		err = o.LogJumpRules(true)
+		if err != nil {
+			return err
+		}
 	}
 
 endOfAddProfile:
@@ -373,8 +382,6 @@ func (o *Operator) DeleteProfile() error {
 		return err
 	}
 
-	log.Infof(ipte.InfoProfileDelete, o.Opts.Profile)
-
 endOfDeleteProfile:
 	err = o.Storage.DeleteProfile(o.Opts.Profile)
 	if err != nil {
@@ -427,36 +434,48 @@ func (o *Operator) GetStateDest() error {
 
 // GetStateProtocol for reading the local protocol state for a given profile
 func (o *Operator) GetStateProtocol() error {
-	src, err := o.Storage.GetPath(fmt.Sprintf("%s.protocol", o.Opts.Profile))
+	protocol, err := o.Storage.GetPath(fmt.Sprintf("%s.protocol", o.Opts.Profile))
 	if err != nil {
 		return err
 	}
 
-	o.Opts.Protocol = src.(string)
+	o.Opts.Protocol = protocol.(string)
 
 	return nil
 }
 
-// GetStateProtocol for reading the local logLevel state for a given profile
+// GetStateLogLevel for reading the local logLevel state for a given profile
 func (o *Operator) GetStateLogLevel() error {
-	src, err := o.Storage.GetPath(fmt.Sprintf("%s.logLevel", o.Opts.Profile))
+	logLevel, err := o.Storage.GetPath(fmt.Sprintf("%s.logLevel", o.Opts.Profile))
 	if err != nil {
 		return err
 	}
 
-	o.Opts.LogLevel = src.(string)
+	o.Opts.LogLevel = logLevel.(string)
+
+	return nil
+}
+
+// GetStateProtocol for reading the local logEnabled state for a given profile
+func (o *Operator) GetStateLogEnabled() error {
+	logEnabled, err := o.Storage.GetPath(fmt.Sprintf("%s.logEnabled", o.Opts.Profile))
+	if err != nil {
+		return err
+	}
+
+	o.Opts.ChainLogging = logEnabled.(bool)
 
 	return nil
 }
 
 // GetStateRulesBackend for reading the local rulesBackend state for a given profile
 func (o *Operator) GetStateRulesBackend() error {
-	src, err := o.Storage.GetPath(fmt.Sprintf("%s.rulesBackend", o.Opts.Profile))
+	rulesBackend, err := o.Storage.GetPath(fmt.Sprintf("%s.rulesBackend", o.Opts.Profile))
 	if err != nil {
 		return err
 	}
 
-	o.Opts.RulesType = src.(string)
+	o.Opts.RulesType = rulesBackend.(string)
 
 	return nil
 }
@@ -479,6 +498,11 @@ func (o *Operator) GetState() error {
 	}
 
 	err = o.GetStateLogLevel()
+	if err != nil {
+		return err
+	}
+
+	err = o.GetStateLogEnabled()
 	if err != nil {
 		return err
 	}

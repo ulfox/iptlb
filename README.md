@@ -150,6 +150,7 @@ date: Fri, 24 Dec 2021 08:12:46 GMT
 test:
   destination:
   - 10.0.1.4:8080
+  logEnabled: true
   logLevel: "4"
   protocol: tcp
   rulesBackend: client
@@ -171,6 +172,5 @@ INFO[0000] [Deleted] Rule: [-j RETURN] table[nat]/chain[IPTLB_NAT_TEST]  Stage=R
 INFO[0000] Done configuring table[nat]/chain[IPTLB_NAT_TEST]  Stage=NATLBRules
 INFO[0000] [Deleted] Rule: [-p tcp -d 10.100.0.10 --dport 8081 -j IPTLB_NAT_TEST] table[nat]/chain[OUTPUT]  Stage=RemoveRule
 INFO[0000] [Deleted] Rule: [-d 10.100.0.10 -p tcp -j LOG --log-prefix IPTLB:OUTPUT:ACCEPT: --log-level 4] table[nat]/chain[OUTPUT]  Stage=RemoveRule
-INFO[0000] Done cleaning profile [test]                  Stage=DeleteProfile
 INFO[0000] Done cleaning profile [test]                  Stage=DeleteProfile
 ```

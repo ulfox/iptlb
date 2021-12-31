@@ -167,6 +167,18 @@ func (d *DB) AddLogLevel(profile, logLevel string) error {
 	return nil
 }
 
+func (d *DB) AddLogEnabled(profile string, logEnabled bool) error {
+	err := d.Storage.Upsert(
+		fmt.Sprintf("%s.%s", profile, "logEnabled"),
+		logEnabled,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *DB) AddRulesBackend(profile, rulesBackend string) error {
 	err := d.Storage.Upsert(
 		fmt.Sprintf("%s.%s", profile, "rulesBackend"),
