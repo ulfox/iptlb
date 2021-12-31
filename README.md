@@ -119,14 +119,20 @@ Ingress endpoint
 - 10.100.0.10:8081 // This is not routable in my network but it will work since we are going to capture the packets in the OUTPUT chain and apply DNAT rules for 10.0.1.4
 
 ```bash
-$> sudo go run main.go -run -profile=test -log-custom-chain -src-addr=10.100.0.10:8081 -dest-addr=10.0.1.4:8080
+$> sudo ./iptlb -run -profile=test -log-custom-chain -src-addr=10.100.0.10:8081 -dest-addr=10.0.1.4:8080
 INFO[0000] Initiating                                    Component=main Prog=iptlb
-INFO[0000] Chain IPT_NAT_LB found                        Component=createTable Prog=iptlb
-INFO[0000] Enabled logging to chain IPT_NAT_LB           Component=createTable Prog=iptlb
-INFO[0000] Rule: -p tcp -d  10.100.0.10 --dport 8081 -j IPT_NAT_LB exists  Component=jumpToCustomNAT Prog=iptlb
-INFO[0000] Chain IPT_FILTER_LB found                     Component=createTable Prog=iptlb
-INFO[0000] Enabled logging to chain IPT_FILTER_LB        Component=createTable Prog=iptlb
-INFO[0000] Rule: -p tcp -d 10.0.1.4 --dport 8080 -j IPT_FILTER_LB exists  Component=jumpToCustomFilter Prog=iptlb
+INFO[0000] map[]                                         Component=main Prog=iptlb
+INFO[0000] db operator initiated                         Component=main Prog=iptlb
+INFO[0000] Inputs validated successfuly                  Component=Operator Stage=Configure
+INFO[0000] Chain [IPTLB_NAT_TEST] on table [nat] does not exist. Creating...  Stage=createChain
+INFO[0000] Enabled logging to chain IPTLB_NAT_TEST       Stage=createChain
+INFO[0000] [Append] Rule: [-p tcp -d 10.100.0.10 --dport 8081 -m statistic --mode random --probability 1.00000 -j DNAT --to-destination 10.0.1.4:8080] on table[nat]/chain[IPTLB_NAT_TEST]  Stage=AddRule
+INFO[0000] [Append] Rule: [-j RETURN] on table[nat]/chain[IPTLB_NAT_TEST]  Stage=AddRule
+INFO[0000] Done configuring table[nat]/chain[IPTLB_NAT_TEST]  Stage=NATLBRules
+INFO[0000] [Insert] Rule: [-p tcp -d 10.100.0.10 --dport 8081 -j IPTLB_NAT_TEST] at [1] on table[nat]/chain[OUTPUT]  Stage=InsertRule
+INFO[0000] [Insert] Rule: [-d 10.100.0.10 -p tcp -j LOG --log-prefix IPTLB:OUTPUT:ACCEPT: --log-level 4] at [1] on table[nat]/chain[OUTPUT]  Stage=InsertRule
+INFO[0000] Done configuring profile [test]               Stage=AddProfile
+
 ```
 
 Doing a curl on the `10.100.0.10:8081`
@@ -146,7 +152,7 @@ date: Fri, 24 Dec 2021 08:12:46 GMT
 **Note**: We can change the statefile manually only when have not applied it. If we make changes manually after we have applied it with **-run** then we IPTLB probably will not delete/update old rules related with the change.
 
 ```bash
- sudo cat local/state.db 
+$> sudo cat local/state.db 
 test:
   destination:
   - 10.0.1.4:8080
@@ -162,7 +168,7 @@ test:
 We can delete a profile by issuing:
 
 ```bash
-sudo ./iptlb -run -profile=test --delete
+$> sudo ./iptlb -run -profile=test --delete
 INFO[0000] Initiating                                    Component=main Prog=iptlb
 INFO[0000] map[]                                         Component=main Prog=iptlb
 INFO[0000] db operator initiated                         Component=main Prog=iptlb
