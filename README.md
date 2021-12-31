@@ -149,7 +149,7 @@ date: Fri, 24 Dec 2021 08:12:46 GMT
 
 ### View state file
 
-**Note**: We can change the statefile manually only when have not applied it. If we make changes manually after we have applied it with **-run** then we IPTLB probably will not delete/update old rules related with the change.
+**Note**: We can change the statefile manually only when have not applied it. If we make changes manually after we have applied it with **-run** then IPTLB probably will not delete/update old rules related with the change.
 
 ```bash
 $> sudo cat local/state.db 

@@ -49,6 +49,10 @@ func main() {
 		log.Fatal("-use-state is incompatible with -src-addr && -dest-addr")
 	}
 
+	if operatorOpts.Delete && !*run {
+		log.Fatal("delete requires -run also. This is to avoid removing the state and leave lefovers in the iptables")
+	}
+
 	logger := logrus.New()
 	log := logger.WithFields(logrus.Fields{
 		"Prog":      "iptlb",
