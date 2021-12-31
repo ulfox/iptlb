@@ -56,7 +56,7 @@ func (o *Operator) CreateChain() error {
 		"--log-level",
 		o.Opts.LogLevel,
 	}
-	err = o.IPT.Append(o.Opts.Table, o.Opts.Chain, ruleArgs...)
+	err = o.AddRule(ruleArgs)
 	if err != nil {
 		log.Fatal(err)
 	}
