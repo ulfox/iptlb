@@ -109,6 +109,7 @@ This option has only one usage, to instruct IPTLB to use the profiles locally. W
 
 ## Example
 
+### Create profile
 Locally I have a 10.0.1.x network (with Host IP 10.0.1.4) and a service listening to port 8080. On this example I will use a different network (10.100.0.10) with different port (8081) as my source, the destination will be the actual host `10.0.1.4:8080` 
 
 Actual endpoint
@@ -138,4 +139,38 @@ x-content-type-options: nosniff
 content-length: 19
 date: Fri, 24 Dec 2021 08:12:46 GMT
 
+```
+
+### View state file
+
+**Note**: We can change the statefile manually only when have not applied it. If we make changes manually after we have applied it with **-run** then we IPTLB probably will not delete/update old rules related with the change.
+
+```bash
+ sudo cat local/state.db 
+test:
+  destination:
+  - 10.0.1.4:8080
+  logLevel: "4"
+  protocol: tcp
+  rulesBackend: client
+  source: 10.100.0.10:8081
+```
+
+### Delete profile
+
+We can delete a profile by issuing:
+
+```bash
+sudo ./iptlb -run -profile=test --delete
+INFO[0000] Initiating                                    Component=main Prog=iptlb
+INFO[0000] map[]                                         Component=main Prog=iptlb
+INFO[0000] db operator initiated                         Component=main Prog=iptlb
+WARN[0000] Delete has been enabled. Deleting rules from profile [test]  Component=Operator Stage=Configure
+INFO[0000] [Deleted] Rule: [-p tcp -d 10.100.0.10 --dport 8081 -m statistic --mode random --probability 1.00000 -j DNAT --to-destination 10.0.1.4:8080] table[nat]/chain[IPTLB_NAT_TEST]  Stage=RemoveRule
+INFO[0000] [Deleted] Rule: [-j RETURN] table[nat]/chain[IPTLB_NAT_TEST]  Stage=RemoveRule
+INFO[0000] Done configuring table[nat]/chain[IPTLB_NAT_TEST]  Stage=NATLBRules
+INFO[0000] [Deleted] Rule: [-p tcp -d 10.100.0.10 --dport 8081 -j IPTLB_NAT_TEST] table[nat]/chain[OUTPUT]  Stage=RemoveRule
+INFO[0000] [Deleted] Rule: [-d 10.100.0.10 -p tcp -j LOG --log-prefix IPTLB:OUTPUT:ACCEPT: --log-level 4] table[nat]/chain[OUTPUT]  Stage=RemoveRule
+INFO[0000] Done cleaning profile [test]                  Stage=DeleteProfile
+INFO[0000] Done cleaning profile [test]                  Stage=DeleteProfile
 ```
